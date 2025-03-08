@@ -25,7 +25,9 @@ SECRET_KEY = 'django-insecure-#54x6t*cin_7-301e+9vw+&8fxc558*7nm1ruiz$*034ja)b)q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'https://se-project-beta-backend.onrender.com/',
+]
 
 LOGIN_URL = '/adminpanel/login/'  # กำหนด URL ของหน้า login สำหรับ admin
 LOGIN_REDIRECT_URL = '/adminpanel/dashboard/'  # หลังจาก login สำเร็จให้ redirect ไปที่ dashboard
