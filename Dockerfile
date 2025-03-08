@@ -1,16 +1,20 @@
-FROM python:3.9-slim
+# ใช้ Python base image
+FROM python:3.9
 
+# ตั้งค่า Working Directory
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# คัดลอกไฟล์ที่จำเป็น
+COPY requirements.txt requirements.txt
 
+# ติดตั้ง dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# คัดลอกโค้ดทั้งหมด
 COPY . .
 
-ENV DJANGO_SETTINGS_MODULE=bookhub.settings
-
-RUN python manage.py migrate
-
+# เปิดพอร์ต 8000
 EXPOSE 8000
 
-CMD ["gunicorn", "bookhub.wsgi:application", "--bind", "0.0.0.0:8000"]
+# รันคำสั่ง migration และเริ่มเซิร์ฟเวอร์
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]

@@ -84,21 +84,24 @@ WSGI_APPLICATION = 'bookhub.wsgi.application'
 
 
 import os
-from urllib.parse import urlparse
+import environ
 
-DATABASE_URL = os.getenv('DATABASE_URL')
-url = urlparse(DATABASE_URL)
+env = environ.Env()
+environ.Env.read_env()
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': url.path[1:],
-        'USER': url.username,
-        'PASSWORD': url.password,
-        'HOST': url.hostname,
-        'PORT': url.port,
+        'NAME': 'postgres',
+        'USER': 'postgres.jesymqwwoxinovuxsibt',
+        'PASSWORD': 'ojs25472004*',
+        'HOST': 'aws-0-ap-southeast-1.pooler.supabase.com',
+        'PORT': '6543',
     }
 }
+
+
+
 
 
 
