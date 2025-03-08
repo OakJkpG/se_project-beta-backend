@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: bookhub-backend
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn bookhub.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: DATABASE_URL
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: "bookhub-backend.onrender.com"
