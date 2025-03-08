@@ -84,14 +84,19 @@ WSGI_APPLICATION = 'bookhub.wsgi.application'
 
 
 import os
+from urllib.parse import urlparse
+
+DATABASE_URL = os.getenv('DATABASE_URL')
+url = urlparse(DATABASE_URL)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DATABASE_NAME', 'bookhub_db'),
-        'USER': os.getenv('DATABASE_USER', 'user'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'password'),
-        'HOST': os.getenv('DATABASE_HOST', 'db'),  # ✅ ต้องใช้ชื่อ `db` ตาม Docker Compose
-        'PORT': os.getenv('DATABASE_PORT', '5432'),
+        'NAME': url.path[1:],
+        'USER': url.username,
+        'PASSWORD': url.password,
+        'HOST': url.hostname,
+        'PORT': url.port,
     }
 }
 

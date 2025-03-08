@@ -1,0 +1,5 @@
+backend:
+  build:
+    context: ./backend
+  environment:
+    - DATABASE_URL=postgres://user:password@db.supabase.co:5432/bookhub_db
