@@ -25,27 +25,57 @@ SECRET_KEY = 'django-insecure-#54x6t*cin_7-301e+9vw+&8fxc558*7nm1ruiz$*034ja)b)q
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'se-project-beta-backend.onrender.com',
-    'localhost',  # ถ้าคุณต้องการใช้ในเครื่อง
-    '127.0.0.1',  # ถ้าคุณใช้ในเครื่อง
-]
+ALLOWED_HOSTS = []
 
-
+LOGIN_URL = '/adminpanel/login/'  # กำหนด URL ของหน้า login สำหรับ admin
+LOGIN_REDIRECT_URL = '/adminpanel/dashboard/'  # หลังจาก login สำเร็จให้ redirect ไปที่ dashboard
 # Application definition
 
+# bookhub/settings.py
 INSTALLED_APPS = [
-    'rest_framework',
-    'corsheaders',
-    'books',
-    'users',
+    # แอปหลักของ Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # แอปของบุคคลที่สาม
+    'rest_framework',
+    'rest_framework.authtoken',
+    'corsheaders',
+
+    # แอปของโปรเจค
+    'users',
+    'books',             # <-- ต้องมีแอปนี้
+    'admin_dashboard',   # <-- ถ้ามี
 ]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # ต้องอยู่ด้านบน
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# อนุญาตให้ทุก origin เชื่อมต่อ (สำหรับพัฒนา)
+CORS_ALLOW_ALL_ORIGINS = True
+
+# ตั้งค่า Email (สำหรับ demo ส่งไปที่ console)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# ตั้งค่า REST Framework (ตัวอย่าง)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -150,3 +180,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+
+
+
