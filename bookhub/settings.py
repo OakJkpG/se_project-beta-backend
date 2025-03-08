@@ -92,6 +92,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://se-project-beta-backend.onrender.com',  # เพิ่มโดเมนนี้
+]
+
 ROOT_URLCONF = 'bookhub.urls'
 
 TEMPLATES = [
