@@ -98,6 +98,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://se-project-beta-backend.onrender.com",
+    "https://se-project-beta-frontend-git-master-oakjkpgs-projects.vercel.app/",  # เพิ่มโดเมนของ frontend ที่ใช้งานจริง
+    "https://se-project-beta-frontend.vercel.app/",
+]
+
 CORS_ALLOWED_ORIGINS = [
     "https://se-project-beta-frontend.vercel.app",
     "http://localhost:8000",
