@@ -90,6 +90,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
+    "https://se-project-beta-frontend-git-master-oakjkpgs-projects.vercel.app/",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
