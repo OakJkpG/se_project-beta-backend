@@ -7,5 +7,5 @@ urlpatterns = [
     path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('publisher/<int:user_id>/approve/', views.approve_publisher, name='approve_publisher'),
     path('publisher/<int:user_id>/reject/', views.reject_publisher, name='reject_publisher'),
-    path('logout/', LogoutView.as_view(next_page='/adminpanel/login/'), name='admin_logout'),
+    path('logout/', views.custom_logout, name='admin_logout'),  # เพิ่ม logout view
 ]

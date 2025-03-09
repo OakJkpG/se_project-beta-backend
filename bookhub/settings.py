@@ -74,9 +74,8 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"       # SMTP Server ของ Gmail
 EMAIL_PORT = 587                    # ใช้ Port 587 สำหรับ TLS
 EMAIL_USE_TLS = True                # เปิดใช้งาน TLS
-EMAIL_USE_SSL = False               # ไม่ใช้ SSL (ถ้าใช้ให้เปลี่ยนเป็น Port 465)
 EMAIL_HOST_USER = "bookhub.noreply@gmail.com"  # อีเมลของคุณ
-EMAIL_HOST_PASSWORD = "bookhubgroup10" # รหัสผ่าน หรือ App Password (ดูข้อ 2)
+EMAIL_HOST_PASSWORD = "asyi watf scne bjav" # รหัสผ่าน หรือ App Password (ดูข้อ 2)
 DEFAULT_FROM_EMAIL = "BookHub <bookhub.noreply@gmail.com>"  # ชื่อผู้ส่ง (เปลี่ยนได้)
 
 
@@ -100,9 +99,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5179",  # React frontend
     "https://se-project-beta-frontend.vercel.app",
+    "http://localhost:8000",
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True  # หรือจะระบุ URL ที่อนุญาตให้เชื่อมต่อจาก React โดยเฉพาะ
 
 ROOT_URLCONF = 'bookhub.urls'
 
@@ -128,7 +129,7 @@ WSGI_APPLICATION = 'bookhub.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
+#database
 import os
 import environ
 
@@ -139,17 +140,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': 'postgres.jesymqwwoxinovuxsibt',
-        'PASSWORD': 'ojs25472004*',
+        'USER': 'postgres.csqtsflaklabqsnjlioy',
+        'PASSWORD': 'bookhubgroup10',
         'HOST': 'aws-0-ap-southeast-1.pooler.supabase.com',
         'PORT': '6543',
     }
 }
-
-
-
-
-
 
 
 # Password validation

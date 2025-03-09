@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from books.models import Book
 from django.urls import reverse
+from django.contrib.auth import logout as auth_logout
 
 # ฟังก์ชันตรวจสอบว่า user เป็น admin (superuser)
 def is_admin(user):
@@ -70,3 +71,11 @@ def reject_publisher(request, user_id):
     )
     messages.success(request, f"Publisher {publisher_email} rejected and removed.")
     return redirect('admin_dashboard')
+
+# Custom logout view
+@login_required
+def custom_logout(request):
+    auth_logout(request)
+    response = redirect('admin_login')  # Redirect ไปที่หน้า login
+    response.delete_cookie('sessionid')  # ลบ cookie ของ session
+    return response

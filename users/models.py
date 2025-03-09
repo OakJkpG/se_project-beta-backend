@@ -1,7 +1,11 @@
-# users/models.py
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import random
 
+# Don't automatically create profiles - let serializers handle this
+# since they need specific profile types and verification codes
 class Profile(models.Model):
     USER_TYPE_CHOICES = (
         ('reader', 'Reader'),
@@ -14,3 +18,8 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} Profile"
+    
+    @staticmethod
+    def generate_verification_code():
+        """Generate a random 6-digit verification code"""
+        return str(random.randint(100000, 999999))

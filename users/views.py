@@ -9,22 +9,50 @@ from .serializers import (
     SignupPublisherSerializer,
 )
 from rest_framework.authtoken.models import Token
-
+from django.contrib.auth.models import User
+from .models import Profile  # ✅ Import Profilefrom 
+from .serializers import serializers
 class LoginView(APIView):
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.validated_data["user"]
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({"token": token.key}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        identifier = request.data.get('identifier')
+        password = request.data.get('password')
+
+        try:
+            if '@' in identifier:
+                user = User.objects.get(email=identifier)
+            else:
+                user = User.objects.get(username=identifier)
+                
+            if not user.is_active:
+                return Response({"error": "Please verify your email address to activate your account."}, 
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if user.check_password(password):
+                token, created = Token.objects.get_or_create(user=user)
+                profile, _ = Profile.objects.get_or_create(user=user)
+                
+                return Response({
+                    "token": token.key,
+                    "role": profile.user_type,
+                    "userId": user.id  # Add userId to the response
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SignupReaderView(APIView):
     def post(self, request):
+        print("📥 Signup Request Data:", request.data)  # ✅ Debug request ที่ส่งมา
         serializer = SignupReaderSerializer(data=request.data)
+        
         if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Verification code sent to your email."}, status=status.HTTP_201_CREATED)
+            user = serializer.save()
+            print("✅ User Created:", user)  # ✅ Debug ว่ามี user สร้างขึ้นไหม
+            return Response({"message": "Verification code sent."}, status=status.HTTP_201_CREATED)
+        
+        print("❌ Signup Errors:", serializer.errors)  # ✅ Debug ว่ามี error อะไร
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ReaderVerificationView(APIView):
