@@ -90,12 +90,11 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React frontend
-    "https://se-project-beta-frontend.vercel.app/",
+    "https://se-project-beta-frontend.vercel.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://se-project-beta-backend.onrender.com',  # เพิ่มโดเมนนี้
-    'https://se-project-beta-frontend.vercel.app/',
 ]
 
 ROOT_URLCONF = 'bookhub.urls'
