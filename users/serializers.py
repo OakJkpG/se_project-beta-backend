@@ -11,17 +11,24 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get("email")
         password = data.get("password")
+
+        # ดึง user จาก email
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             raise serializers.ValidationError("Invalid credentials")
-        user = authenticate(username=user.username, password=password)
+
+        # ใช้ authenticate() กับ username (ที่เป็น email)
+        user = authenticate(username=user.email, password=password)
+
         if not user:
             raise serializers.ValidationError("Invalid credentials")
         if not user.is_active:
             raise serializers.ValidationError("User account not activated")
+
         data["user"] = user
         return data
+
 
 class SignupReaderSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=150)
@@ -52,9 +59,9 @@ class SignupReaderSerializer(serializers.Serializer):
         send_mail(
             'Your Verification Code',
             f'Your verification code is: {verification_code}',
-            'noreply@bookhub.com',
+            'bookhub.noreply@gmail.com',
             [validated_data["email"]],
-            fail_silently=True,
+            fail_silently=False,
         )
         return user
 
@@ -111,8 +118,8 @@ class SignupPublisherSerializer(serializers.Serializer):
         send_mail(
             'New Publisher Signup',
             f'A new publisher has registered with email: {validated_data["email"]}. Please review and activate the account.',
-            'noreply@bookhub.com',
-            ['admin@bookhub.com'],
-            fail_silently=True,
+            'bookhub.noreply@gmail.com',
+            ['s6604062630099@email.kmutnb.ac.th'],
+            fail_silently=False,
         )
         return user

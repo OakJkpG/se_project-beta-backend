@@ -67,7 +67,18 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 # ตั้งค่า Email (สำหรับ demo ส่งไปที่ console)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ตั้งค่า Email Backend (ใช้ SMTP)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# SMTP Configuration (ตัวอย่างใช้ Gmail)
+EMAIL_HOST = "smtp.gmail.com"       # SMTP Server ของ Gmail
+EMAIL_PORT = 587                    # ใช้ Port 587 สำหรับ TLS
+EMAIL_USE_TLS = True                # เปิดใช้งาน TLS
+EMAIL_USE_SSL = False               # ไม่ใช้ SSL (ถ้าใช้ให้เปลี่ยนเป็น Port 465)
+EMAIL_HOST_USER = "bookhub.noreply@gmail.com"  # อีเมลของคุณ
+EMAIL_HOST_PASSWORD = "bookhubgroup10" # รหัสผ่าน หรือ App Password (ดูข้อ 2)
+DEFAULT_FROM_EMAIL = "BookHub <bookhub.noreply@gmail.com>"  # ชื่อผู้ส่ง (เปลี่ยนได้)
+
 
 # ตั้งค่า REST Framework (ตัวอย่าง)
 REST_FRAMEWORK = {
@@ -89,12 +100,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # React frontend
+    "http://localhost:5179",  # React frontend
     "https://se-project-beta-frontend.vercel.app",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://se-project-beta-backend.onrender.com',  # เพิ่มโดเมนนี้
 ]
 
 ROOT_URLCONF = 'bookhub.urls'

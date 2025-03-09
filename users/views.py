@@ -42,3 +42,4 @@ class SignupPublisherView(APIView):
             serializer.save()
             return Response({"message": "Registration submitted for admin verification."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
