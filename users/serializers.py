@@ -1,4 +1,3 @@
-# users/serializers.py
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Profile
@@ -34,52 +33,48 @@ class LoginSerializer(serializers.Serializer):
         data["user"] = user
         return data
 
-class SignupReaderSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField()
+class SignupReaderSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    
-    def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("Email already exists")
-        return value
+
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True}
+        }
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
             raise serializers.ValidationError("Username already exists")
         return value
-    
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already exists")
+        return value
+
     def create(self, validated_data):
-        # Create user with inactive status
         user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            password=validated_data["password"],
-            is_active=False  # Pending email verification
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            is_active=False  # Set user as inactive until email verification
         )
-        
-        # Create profile with verification code
-        verification_code = Profile.generate_verification_code()
-        Profile.objects.create(
-            user=user, 
-            user_type='reader', 
-            verification_code=verification_code
-        )
-        
-        print("Code: ",verification_code)
-        # Send verification email
-        self._send_verification_email(validated_data["email"], verification_code)
         return user
     
     def _send_verification_email(self, email, verification_code):
         """Helper method to send verification email"""
-        send_mail(
-            'Your Verification Code',
-            f'Your verification code is: {verification_code}',
-            'bookhub.noreply@gmail.com',
-            [email],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                'Your Verification Code',
+                f'Your verification code is: {verification_code}',
+                'bookhub.noreply@gmail.com',  # อีเมล Gmail ของคุณ
+                [email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            raise serializers.ValidationError(f"Failed to send verification email: {str(e)}")
 
 class ReaderVerificationSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -144,10 +139,9 @@ class SignupPublisherSerializer(serializers.Serializer):
             is_active=False  # Pending admin approval
         )
         
-        # Create publisher profile
-        Profile.objects.create(
-            user=user, 
-            user_type='publisher', 
+        # Get the profile created by signal and update it to be a publisher profile
+        Profile.objects.filter(user=user).update(
+            user_type='publisher',
             id_card=validated_data["id_card"]
         )
         
@@ -157,10 +151,13 @@ class SignupPublisherSerializer(serializers.Serializer):
     
     def _send_admin_notification(self, publisher_email):
         """Helper method to send admin notification"""
-        send_mail(
-            'New Publisher Signup',
-            f'A new publisher has registered with email: {publisher_email}. Please review and activate the account.',
-            'bookhub.noreply@gmail.com',
-            ['s6604062630099@email.kmutnb.ac.th'],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                'New Publisher Signup',
+                f'A new publisher has registered with email: {publisher_email}. Please review and activate the account.',
+                'bookhub.noreply@gmail.com',  # อีเมล Gmail ของคุณ
+                ['s6604062630099@email.kmutnb.ac.th'],  # อีเมลผู้ดูแลระบบ
+                fail_silently=False,
+            )
+        except Exception as e:
+            raise serializers.ValidationError(f"Failed to send admin notification: {str(e)}")
