@@ -12,6 +12,15 @@ from django.http import HttpResponse
 from .models import Tag
 from .serializers import TagSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.conf import settings
+from .storages import PrivateMediaStorage
+from supabase import create_client
+import logging
+
+logger = logging.getLogger(__name__)
+
+# สร้าง Supabase Client
+supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)
 
 def home(request):
     return HttpResponse("Welcome to Books API!")
@@ -55,38 +64,33 @@ class ReturnBookView(APIView):
 
     def post(self, request, borrow_id):
         try:
-            # Find the borrow record and verify ownership
+            # Fetch the borrow record
             borrow = BookBorrow.objects.select_related('book').get(
                 id=borrow_id,
-                user=request.user,
-                is_returned=False
+                reader=request.user,
+                returned_at__isnull=True  # Ensure the book hasn't already been returned
             )
-            
-            # Mark as returned
-            borrow.is_returned = True
-            borrow.return_date = timezone.now()
+
+            # Mark the book as returned
+            borrow.returned_at = timezone.now()
             borrow.save()
 
-            # Log the return
-            print(f"Book returned: Borrow ID {borrow_id} by user {request.user.id}")
+            # Update the book's borrow count
+            book = borrow.book
+            if book.borrow_count > 0:
+                book.borrow_count -= 1
+                book.save()
 
             return Response({
-                "status": "success",
-                "message": "Book returned successfully"
-            })
+                'status': 'success',
+                'message': 'Book returned successfully'
+            }, status=status.HTTP_200_OK)
 
         except BookBorrow.DoesNotExist:
             return Response({
-                "status": "error",
-                "message": "Borrow record not found or already returned"
+                'status': 'error',
+                'message': 'Borrow record not found or already returned'
             }, status=status.HTTP_404_NOT_FOUND)
-        
-        except Exception as e:
-            print(f"Error returning book: {str(e)}")
-            return Response({
-                "status": "error",
-                "message": "Failed to return book"
-            }, status=status.HTTP_400_BAD_REQUEST)
 
 class AddBookView(generics.CreateAPIView):
     queryset = Book.objects.all()
@@ -124,7 +128,6 @@ class ReaderAccountView(APIView):
                 "role": user.profile.user_type,
                 "registered_at": user.date_joined,
                 "borrow_count": borrowed.count(),
-                "profile_image": "",  # เพิ่ม field รูปโปรไฟล์หากมี
             },
             "borrowed_books": borrow_serializer.data
         }
@@ -157,19 +160,83 @@ class ReadBookView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, borrow_id):
-        borrow_entry = get_object_or_404(BookBorrow, id=borrow_id, reader=request.user)
-        now = timezone.now()
-        if now > borrow_entry.due_date:
-            borrow_entry.delete()
-            return Response({"error": "Borrow period expired. This book is no longer accessible."},
-                            status=status.HTTP_403_FORBIDDEN)
-        book = borrow_entry.book
-        if not book.pdf_file:
-            return Response({"error": "PDF not available."},
-                            status=status.HTTP_404_NOT_FOUND)
-        response = FileResponse(book.pdf_file.open('rb'), content_type='application/pdf')
-        response['Content-Disposition'] = 'inline; filename="{}"'.format(book.pdf_file.name)
-        return response
+        try:
+            # Get the borrow entry and validate it
+            borrow_entry = get_object_or_404(
+                BookBorrow, 
+                id=borrow_id,
+                reader_id=request.user.id,
+                returned_at__isnull=True
+            )
+
+            # Log borrow entry details
+            logger.debug(f"Found borrow entry: ID={borrow_entry.id}, Book={borrow_entry.book_id}, Reader={borrow_entry.reader_id}")
+
+            # Check if the borrow period is still valid
+            if borrow_entry.due_date < timezone.now():
+                logger.warning(f"Borrow period expired for borrow_id={borrow_id}")
+                return Response(
+                    {"error": "Borrow period has expired"}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Get the book
+            book = get_object_or_404(Book, id=borrow_entry.book_id)
+            if not book.pdf_file:
+                logger.error(f"No PDF file path found for book_id={book.id}")
+                return Response(
+                    {"error": "PDF file path not found for this book"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Construct the correct file path
+            file_name = book.pdf_file.name
+            if not file_name:
+                logger.error(f"PDF file name is empty for book_id={book.id}")
+                return Response(
+                    {"error": "PDF file name is empty"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            file_path = f"pdfs/{file_name}" if not file_name.startswith('pdfs/') else file_name
+            logger.debug(f"Book ID: {book.id}, PDF File Name: {file_name}")
+            logger.debug(f"Constructed File Path: {file_path}")
+
+            try:
+                # Generate signed URL with the correct path
+                response = supabase.storage.from_("Bookhub_pdf").create_signed_url(
+                    path=file_path,
+                    expires_in=3600  # URL expires in 1 hour
+                )
+
+                if not response or not response.get("signedURL"):
+                    logger.error("Failed to generate signed URL")
+                    raise ValueError("Failed to generate signed URL")
+
+                logger.info(f"Successfully generated signed URL for book_id={book.id}")
+                return Response(
+                    {"signed_url": response["signedURL"]}, 
+                    status=status.HTTP_200_OK
+                )
+
+            except Exception as e:
+                logger.error(f"Supabase storage error: {str(e)}")
+                return Response(
+                    {"error": "Failed to access PDF file", "details": str(e), "file_path": file_path},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+        except BookBorrow.DoesNotExist:
+            logger.warning(f"Borrow record not found: borrow_id={borrow_id}")
+            return Response(
+                {"error": "Borrow record not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return Response(
+                {"error": "An unexpected error occurred"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class EditBookView(APIView):
     permission_classes = [permissions.IsAuthenticated]

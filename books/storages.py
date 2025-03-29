@@ -13,3 +13,4 @@ class PrivateMediaStorage(S3Boto3Storage):
     file_overwrite = False
     custom_domain = False
     bucket_name = settings.AWS_STORAGE_BUCKET_NAME_PDF
+    querystring_expire = 3600  # Signed URL หมดอายุใน 1 ชั่วโมง
